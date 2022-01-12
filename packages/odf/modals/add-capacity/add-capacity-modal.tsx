@@ -122,13 +122,13 @@ type RawCapacityProps = {
 
 type AddSSCapacityModalProps = {
   storageSystem: StorageSystemKind;
-  close?: () => void;
+  closeModal?: () => void;
   cancel?: () => void;
 };
 
 const AddSSCapacityModal: React.FC<AddSSCapacityModalProps> = ({
   storageSystem,
-  close,
+  closeModal: close,
   cancel,
 }) => {
   const [ocs, ocsLoaded, ocsError] = useK8sGet<StorageClusterKind>(

@@ -1,5 +1,7 @@
 import * as React from 'react';
-import { KebabMenu } from '@odf/shared/list/kebab';
+import { addSSCapacityModal } from '@odf/core/modals/add-capacity/add-capacity-modal';
+import { Kebab } from '@odf/shared/kebab/kebab';
+import { useModalLauncher } from '@odf/shared/modals/modalLauncher';
 import { ClusterServiceVersionModel } from '@odf/shared/models';
 import { Status } from '@odf/shared/status/Status';
 import {
@@ -26,6 +28,7 @@ import classNames from 'classnames';
 import * as fuzzy from 'fuzzysearch';
 import * as _ from 'lodash';
 import { useTranslation } from 'react-i18next';
+import { DropdownItem } from '@patternfly/react-core';
 import { sortable, wrappable } from '@patternfly/react-table';
 import { ODFStorageSystem } from '../../models/odf';
 import { ODF_QUERIES, ODFQueries } from '../../queries';
@@ -183,7 +186,7 @@ const StorageSystemTableRow: React.FC<RowProps<StorageSystemKind, any>> = ({
   const { apiGroup, apiVersion, kind } = getGVK(obj.spec.kind);
   const systemKind = referenceForGroupVersionKind(apiGroup)(apiVersion)(kind);
   const systemName = obj?.metadata?.name;
-  const { normalizedMetrics } = rowData as any;
+  const { normalizedMetrics, launchModal } = rowData as any;
 
   const { rawCapacity, usedCapacity, iops, throughput, latency } =
     normalizedMetrics?.[systemName] || {};
@@ -220,17 +223,12 @@ const StorageSystemTableRow: React.FC<RowProps<StorageSystemKind, any>> = ({
         {latency?.string || '-'}
       </TableData>
       <TableData {...tableColumnsInfo[7]} activeColumnIDs={activeColumnIDs}>
-        <KebabMenu<StorageSystemKind>
-          actions={[
-            {
-              actionName: 'Press Me',
-              onClick: (resource) => console.log(resource),
-            },
-            {
-              actionName: 'Add Capacity',
-              // eslint-disable-next-line react/display-name
-              onClick: (resource) => {},
-            },
+        <Kebab
+          launchModal={launchModal}
+          kebabItems={[
+            <DropdownItem key="Add Capacity" id="Add Capacity">
+              Add Capacity
+            </DropdownItem>,
           ]}
           resource={obj}
         />
@@ -248,6 +246,10 @@ export const StorageSystemListPage: React.FC = () => {
   const [systems, loaded, loadError] = useK8sWatchResource<StorageSystemKind[]>(
     StorageSystemResource
   );
+
+  const [Modal, modalProps, launchModal] = useModalLauncher({
+    'Add Capacity': addSSCapacityModal,
+  } as any);
 
   const [latency, , latLoading] = usePrometheusPoll({
     endpoint: PrometheusEndpoint.QUERY,
@@ -290,6 +292,7 @@ export const StorageSystemListPage: React.FC = () => {
   );
   return (
     <>
+      {Modal ? <Modal {...modalProps} /> : null}
       <ListPageHeader title={null}>
         <ListPageCreateButton
           onClick={() =>
@@ -317,7 +320,7 @@ export const StorageSystemListPage: React.FC = () => {
           unfilteredData={systems}
           loaded={loaded}
           loadError={loadError}
-          rowData={{ normalizedMetrics }}
+          rowData={{ normalizedMetrics, launchModal }}
         />
       </ListPageBody>
     </>

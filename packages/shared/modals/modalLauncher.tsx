@@ -13,8 +13,9 @@ const defaultModalMap = {
 };
 
 export const useModalLauncher = (modals?: typeof defaultModalMap) => {
-  const [isOpen, setOpen] = React.useState(true);
+  const [isOpen, setOpen] = React.useState(false);
   const [modalKey, setModalKey] = React.useState('');
+  const [extraProps, setProps] = React.useState({});
 
   const modalMap = React.useMemo(
     () => ({ ...defaultModalMap, ...(modals ? modals : {}) }),
@@ -22,19 +23,17 @@ export const useModalLauncher = (modals?: typeof defaultModalMap) => {
   );
 
   const launchModal = React.useCallback(
-    (key: string) => {
+    (key: string, extraProps: {}) => {
+      setProps(extraProps);
       setOpen(true);
       setModalKey(key);
     },
     [setOpen, setModalKey]
   );
 
-  const onClose = React.useCallback(() => {
-    setOpen(false);
-    setModalKey('');
-  }, [setOpen, setModalKey]);
-
-  const props = React.useMemo(() => ({ isOpen, closeModal: onClose }), [isOpen, onClose]);
-
-  return [modalMap[modalKey], props, launchModal];
+  return [
+    modalMap[modalKey],
+    { isOpen, closeModal: () => setOpen(false), extraProps },
+    launchModal,
+  ];
 };
