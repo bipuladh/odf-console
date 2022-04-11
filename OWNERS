@@ -2,8 +2,10 @@ reviewers:
   - afreen23
   - cloudbehl
   - bipuladh
+  - SanjalKatiyar
 approvers:
   - afreen23
   - cloudbehl
   - bipuladh
+  - SanjalKatiyar
 component: ODF Console
