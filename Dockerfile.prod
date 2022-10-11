@@ -1,8 +1,8 @@
 FROM registry-proxy.engineering.redhat.com/rh-osbs/rhacm2-yarn-builder:v2.3.0_14-1.20210810163126 AS builder
-ARG TARGET_BRANCH=master
+ARG TARGET_BRANCH=410
 
 RUN dnf install -y git
-RUN git clone https://github.com/red-hat-storage/odf-console.git
+RUN git clone https://github.com/bipuladh/odf-console.git
 WORKDIR /odf-console
 RUN git fetch origin ${TARGET_BRANCH} && git checkout origin/${TARGET_BRANCH}
 
@@ -10,7 +10,7 @@ RUN yarn install --prod=false
 RUN yarn build
 RUN mv ./dist ../app
 
-RUN git fetch origin ${TARGET_BRANCH}-compatibility && git checkout origin/${TARGET_BRANCH}-compatibility
+RUN git fetch origin ${TARGET_BRANCH}-compat && git checkout origin/${TARGET_BRANCH}-compat
 RUN yarn install
 RUN yarn build
 RUN mv ./dist ../compatibility
