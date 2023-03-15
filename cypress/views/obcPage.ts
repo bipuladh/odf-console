@@ -28,6 +28,8 @@ export class CreateOBCHandler {
     cy.byTestID('loading-indicator').should('not.exist');
     cy.byTestID('sc-dropdown').should('be.visible').click();
     cy.contains('openshift-storage.noobaa.io').click();
+    // Wait for the Bucket Class to resolve
+    app.waitForLoad();
     cy.byTestID('obc-create').click();
     cy.byLegacyTestID('resource-title').contains(this.name, {
       timeout: MINUTE,
