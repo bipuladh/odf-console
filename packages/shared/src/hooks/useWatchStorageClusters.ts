@@ -1,4 +1,8 @@
-import { IBMFlashSystemModel, StorageClusterModel } from '@odf/shared/models';
+import {
+  IBMFlashSystemModel,
+  RemoteClusterModel,
+  StorageClusterModel,
+} from '@odf/shared/models';
 import { StorageClusterKind } from '@odf/shared/types';
 import {
   K8sResourceKind,
@@ -10,6 +14,7 @@ import { WatchK8sResources } from '@openshift-console/dynamic-plugin-sdk-interna
 type AllClusters = {
   storageClusters: StorageClusterKind[];
   flashSystemClusters: K8sResourceKind[];
+  remoteClusters: K8sResourceKind[];
 };
 
 const resources: WatchK8sResources<AllClusters> = {
@@ -26,6 +31,14 @@ const resources: WatchK8sResources<AllClusters> = {
       group: IBMFlashSystemModel.apiGroup,
       version: IBMFlashSystemModel.apiVersion,
       kind: IBMFlashSystemModel.kind,
+    },
+    isList: true,
+  },
+  remoteClusters: {
+    groupVersionKind: {
+      group: RemoteClusterModel.apiGroup,
+      version: RemoteClusterModel.apiVersion,
+      kind: RemoteClusterModel.kind,
     },
     isList: true,
   },
