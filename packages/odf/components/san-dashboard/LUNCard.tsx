@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { SAN_STORAGE_SYSTEM_NAME } from '@odf/core/constants';
+import { useScaleGetRoute } from '@odf/core/hooks/useScalegetRoute';
 import { FileSystemKind } from '@odf/core/types/scale';
 import { DASH, getName, getNamespace } from '@odf/shared';
 import { Kebab } from '@odf/shared/kebab';
@@ -83,11 +84,6 @@ const LUNGroupStatusIcon: React.FC<{
 
 const getStorageClassName = (fileSystem: FileSystemKind): string => {
   return getName(fileSystem);
-};
-
-// Todo(bipuladh) Fix this
-const getConsoleLink = (_fileSystem: FileSystemKind): string | undefined => {
-  return undefined;
 };
 
 const lunGroupStatusFilter = (t): RowFilter<FileSystemKind> => ({
@@ -216,7 +212,7 @@ const LUNGroupRow: React.FC<RowProps<FileSystemKind, CustomData>> = ({
   const status = getLUNGroupStatus(obj);
   const isHealthy = status === HealthState.OK;
   const storageClassName = getStorageClassName(obj);
-  const consoleLink = getConsoleLink(obj);
+  const consoleLink = useScaleGetRoute();
   const cleanupBeforeDelete = async (fs: FileSystemKind) => {
     await k8sPatch({
       model: FileSystemModel,
