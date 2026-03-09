@@ -6,8 +6,13 @@ ARG OPENSHIFT_CI=true
 ENV OPENSHIFT_CI=${OPENSHIFT_CI}
 
 WORKDIR /app
+
+# Enable Corepack and install Yarn v4
+RUN corepack enable && \
+    corepack prepare yarn@4.12.0 --activate
+
 COPY . /app
-RUN yarn install --prod --frozen-lockfile --network-timeout 300000
+RUN yarn install --immutable
 RUN BUILD_SCRIPT=build; \
     if [ "$PLUGIN" = "client" ]; then \
       BUILD_SCRIPT="${BUILD_SCRIPT}-client"; \
@@ -16,10 +21,14 @@ RUN BUILD_SCRIPT=build; \
     fi && \
     NODE_OPTIONS="--max-old-space-size=1024" yarn "${BUILD_SCRIPT}" && \
     mv /app/plugins/${PLUGIN}/dist /dist
+RUN yarn workspaces focus --all --production
 
 FROM docker.io/library/node:22.17
 
-RUN yarn global add http-server
+# Enable Corepack and install Yarn v4
+RUN corepack enable && \
+    corepack prepare yarn@4.12.0 --activate && \
+    npm install -g http-server
 COPY --from=builder /dist /app
 COPY --from=builder /dist /app/compatibility
 COPY --from=builder /app/http-server.sh .
