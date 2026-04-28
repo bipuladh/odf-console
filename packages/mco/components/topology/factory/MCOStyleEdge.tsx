@@ -17,13 +17,18 @@ const MCOStyleEdgeComponent: React.FC<MCOStyleEdgeProps> = ({
   element,
   ...rest
 }) => {
-  // Simple non-directional edges - just connect the nodes naturally
-  // No arrows, no specific anchor points, let layout engine route them
+  const data = element.getData();
+  const isOperation = data?.isOperation;
+
+  // For operation edges, show direction with an arrow at the target
+  // This visualizes the flow: source cluster -> failover node -> target cluster
   return (
     <DefaultEdge
       element={element}
       {...rest}
-      endTerminalType={EdgeTerminalType.none}
+      endTerminalType={
+        isOperation ? EdgeTerminalType.directional : EdgeTerminalType.none
+      }
       startTerminalType={EdgeTerminalType.none}
       edgeStyle={EdgeStyle.dashed} // Dashed to show it's an operation in progress
       className="mco-topology-edge--active-operation"

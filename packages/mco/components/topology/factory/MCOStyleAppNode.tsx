@@ -76,19 +76,11 @@ const MCOStyleAppNodeComponent: React.FC<MCOStyleAppNodeProps> = ({
       ? data.appStatus
       : getEffectiveDRStatus(data?.phase, data?.progression);
   const nodeStatus = getDRNodeStatus(effectiveStatus);
-  const isOperation = !data?.isStatic && data?.isSource !== undefined;
-  const animationClass = isOperation
-    ? data.isSource
-      ? 'mco-app-node--source'
-      : 'mco-app-node--target'
-    : undefined;
-
   const phaseDecorators = renderDecorators(element, data, true);
 
   return (
     <DefaultNode
       element={element}
-      className={animationClass}
       scaleLabel={false}
       showLabel={showLabel}
       attachments={
@@ -106,7 +98,9 @@ const MCOStyleAppNodeComponent: React.FC<MCOStyleAppNodeProps> = ({
           (height - ICON_SIZE) / 2
         })`}
       >
-        <CogIcon width={ICON_SIZE} height={ICON_SIZE} />
+        {(data.isSource || data.isStatic) && (
+          <CogIcon width={ICON_SIZE} height={ICON_SIZE} />
+        )}
       </g>
     </DefaultNode>
   );

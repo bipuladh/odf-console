@@ -10,7 +10,10 @@ import {
   EdgeModel,
   TopologyQuadrant,
 } from '@patternfly/react-topology';
-import { MANAGED_CLUSTER_CONDITION_AVAILABLE } from '../../../constants';
+import {
+  DRActionType,
+  MANAGED_CLUSTER_CONDITION_AVAILABLE,
+} from '../../../constants';
 import { ClusterPairOperationsMap } from '../../../hooks/useActiveDROperations';
 import {
   ClusterPairPoliciesMap,
@@ -22,6 +25,12 @@ import {
   DRPlacementControlConditionType,
 } from '../../../types';
 import { getEffectiveDRStatus } from '../../../utils/dr-status';
+import {
+  getCurrentStepFromFlow,
+  FAILOVER_FLOW,
+  RELOCATE_FLOW,
+  RELOCATE_DISCOVERED_FLOW,
+} from '../../dr-status-popover/progression-train-view';
 import { TOPOLOGY_CONSTANTS } from '../constants';
 import {
   DecoratorIcon,
@@ -41,6 +50,37 @@ const isClusterHealthy = (cluster: ACMManagedClusterKind): boolean => {
   return !!conditions.find(
     (c) => c.type === MANAGED_CLUSTER_CONDITION_AVAILABLE && c.status === 'True'
   );
+};
+
+/**
+ * Helper function to get a granular step-based label for an operation.
+ * Returns step labels like "Restoring", "Preparing", etc. when in active operations,
+ * or falls back to effective status for completed/static states.
+ */
+const getOperationLabel = (
+  action: string,
+  progression: string | undefined,
+  effectiveStatus: string,
+  isDiscoveredApp?: boolean
+): string => {
+  // If progression is defined and we're in an active operation, map to step
+  if (
+    progression &&
+    (action === DRActionType.FAILOVER || action === DRActionType.RELOCATE)
+  ) {
+    const flow =
+      action === DRActionType.FAILOVER
+        ? FAILOVER_FLOW
+        : isDiscoveredApp
+          ? RELOCATE_DISCOVERED_FLOW
+          : RELOCATE_FLOW;
+
+    const currentStep = getCurrentStepFromFlow(progression, flow);
+    return currentStep;
+  }
+
+  // Fall back to effective status for other cases
+  return effectiveStatus;
 };
 
 /**
@@ -70,7 +110,17 @@ const createGroupedOperationNodes = (
       protectedCondition,
       volumeLastGroupSyncTime
     );
-    const label = effectiveStatus;
+    // Use step-based label (e.g., "Restoring") for better alignment with progression train view
+    const isDiscoveredApp =
+      ops[0].pav?.metadata?.labels?.[
+        'cluster.open-cluster-management.io/backup'
+      ] === 'ramen';
+    const label = getOperationLabel(
+      action,
+      progression,
+      effectiveStatus,
+      isDiscoveredApp
+    );
     const directionLabel = isSource ? 'source' : 'target';
     const appId = `app-group-${clusterName}-${directionLabel}-${groupKey}`;
 
@@ -815,7 +865,7 @@ export const generateClusterNodesModel = (
     graph: {
       id: 'mco-topology',
       type: 'graph',
-      layout: 'Cola',
+      layout: 'Grid',
     },
     nodes: [...nodes, ...failoverNodesWithEdges, ...pairingBoxNodes], // Cluster nodes FIRST, then failover nodes, then pairing boxes
     edges,

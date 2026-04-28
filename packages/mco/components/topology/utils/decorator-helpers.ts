@@ -1,6 +1,7 @@
 import { DRStatus } from '@odf/mco/utils/dr-status';
 import { NodeStatus, TopologyQuadrant } from '@patternfly/react-topology';
 import { Phase, Progression } from '../../../types/ramen';
+import { TrainStep } from '../../dr-status-popover/progression-train-view';
 import { DecoratorIcon, TopologyDecorator } from '../types';
 
 /**
@@ -41,6 +42,11 @@ export const getDecoratorForStatus = (
     case Phase.Initiating:
     case Phase.Deploying:
     case Progression.CleaningUp:
+    case TrainStep.Preparing:
+    case TrainStep.Failover:
+    case TrainStep.Syncing:
+    case TrainStep.Restoring:
+    case TrainStep.CleanUp:
       icon = DecoratorIcon.InProgress;
       tooltip = `${drStatus}...`;
       status = NodeStatus.info;

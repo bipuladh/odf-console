@@ -1,6 +1,13 @@
 .mco-topology-edge {
   &--active-operation {
     animation: pulse-edge 2s ease-in-out infinite;
+
+    // Style the directional arrow
+    .pf-topology-connector-arrow {
+      fill: var(--pf-v5-global--active-color--100);
+      stroke: var(--pf-v5-global--active-color--100);
+      stroke-width: 2;
+    }
   }
 }
 

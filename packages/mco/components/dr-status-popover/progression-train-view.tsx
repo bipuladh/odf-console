@@ -200,7 +200,7 @@ export const RELOCATE_DISCOVERED_FLOW: StepConfig[] = [
   },
 ];
 
-const getCurrentStepFromFlow = (
+export const getCurrentStepFromFlow = (
   progression: string | undefined,
   flow: StepConfig[]
 ): TrainStep => {

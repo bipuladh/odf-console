@@ -138,20 +138,48 @@ const shouldShowProtecting = (
 
 /**
  * Determines whether to show "ProtectionError" status.
+ * Detects errors in both explicit Error reasons and Progressing states with underlying errors.
  */
 export const shouldShowProtectionError = (
   protectedCondition?: K8sResourceCondition
 ): boolean => {
   if (!protectedCondition) return false;
 
-  const { status, reason } = protectedCondition;
+  const { status, reason, message } = protectedCondition;
 
-  // Only show error for Error reasons with actionable statuses
-  return (
+  // Case 1: Explicit error reason
+  if (
     reason === DRPlacementControlConditionReason.Error &&
     (status === K8sResourceConditionStatus.True ||
       status === K8sResourceConditionStatus.False)
-  );
+  ) {
+    return true;
+  }
+
+  // Case 2: Progressing with False status often indicates retrying after error
+  // Check if the message contains error indicators from VRG resourceConditions
+  // Example: "is progressing on protecting workload resources (unable to ListKeys...)"
+  if (
+    reason === DRPlacementControlConditionReason.Progressing &&
+    status === K8sResourceConditionStatus.False &&
+    message
+  ) {
+    // Look for common error patterns in the message
+    const errorPatterns = [
+      'unable to',
+      'error',
+      'failed',
+      'failure',
+      'cannot',
+      'could not',
+      'denied',
+      'timeout',
+    ];
+    const lowerMessage = message.toLowerCase();
+    return errorPatterns.some((pattern) => lowerMessage.includes(pattern));
+  }
+
+  return false;
 };
 
 /**
@@ -311,7 +339,18 @@ export const getEffectiveDRStatus = (
     return DRStatus.Critical;
   }
 
-  if (hasProtectionError) {
+  // During active operations (FailingOver/Relocating), prioritize showing the
+  // operation status over temporary protection errors. Protection errors during
+  // active operations (e.g., waiting for PVCs to be ready) are expected transient
+  // states and shouldn't be displayed as critical errors.
+  if (
+    phase === Phase.FailingOver ||
+    phase === Phase.Relocating ||
+    phase === Phase.Deleting
+  ) {
+    // Skip protection error check during active operations - handle phase below
+  } else if (hasProtectionError) {
+    // Only show protection error when NOT in an active operation
     return DRStatus.ProtectionError;
   }
 
